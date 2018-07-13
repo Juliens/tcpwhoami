@@ -12,12 +12,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var port, certFile, keyFile string
+var port, certFile, keyFile, certContent, keyContent string
 
 func init() {
 	flag.StringVar(&port, "port", "8080", "give me a port number")
 	flag.StringVar(&certFile, "cert", "", "cert file")
 	flag.StringVar(&keyFile, "key", "", "key file")
+	flag.StringVar(&certContent, "certcontent", "", "cert content")
+	flag.StringVar(&keyContent, "keycontent", "", "key content")
 }
 
 func main() {
@@ -25,7 +27,6 @@ func main() {
 
 	var err error
 	var l net.Listener
-	fmt.Println(certFile, keyFile)
 	if certFile != "" && keyFile != "" {
 		config := &tls.Config{}
 		config.Certificates = make([]tls.Certificate, 1)
@@ -35,6 +36,16 @@ func main() {
 		}
 		l, err = tls.Listen("tcp", ":"+port, config)
 		fmt.Printf("Start TCP WhoamI on port %s with cert %s and key %s\n", port, certFile, keyFile)
+	} else if certContent != "" && keyContent != "" {
+		config := &tls.Config{}
+		config.Certificates = make([]tls.Certificate, 1)
+		config.Certificates[0], err = tls.X509KeyPair([]byte(certContent), []byte(keyContent))
+		if err != nil {
+			logrus.Fatalf("Invalid certificate: %v", err)
+		}
+		l, err = tls.Listen("tcp", ":"+port, config)
+		fmt.Printf("Start TCP WhoamI on port %s with cert content and key content\n", port)
+
 	} else {
 		l, err = net.Listen("tcp", ":"+port)
 		fmt.Printf("Start TCP WhoamI on port %s\n", port)
