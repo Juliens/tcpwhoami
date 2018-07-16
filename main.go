@@ -39,6 +39,8 @@ func main() {
 	} else if certContent != "" && keyContent != "" {
 		config := &tls.Config{}
 		config.Certificates = make([]tls.Certificate, 1)
+		fmt.Println(certContent)
+		fmt.Println(keyContent)
 		config.Certificates[0], err = tls.X509KeyPair([]byte(certContent), []byte(keyContent))
 		if err != nil {
 			logrus.Fatalf("Invalid certificate: %v", err)
@@ -57,15 +59,19 @@ func main() {
 
 	for {
 		conn, err := l.Accept()
+		logrus.Debugf("Accept connection")
 		if err != nil {
 			logrus.Errorf("Error while Accept: %v", err)
 		}
-
-		_, err = conn.Write(getData())
-		if err != nil {
-			logrus.Errorf("Error while Write: %v", err)
-		}
-		conn.Close()
+		go func() {
+			logrus.Debugf("Write data")
+			n, err := conn.Write(getData())
+			logrus.Debugf("%d writed data", n)
+			if err != nil {
+				logrus.Errorf("Error while Write: %v", err)
+			}
+			conn.Close()
+		}()
 	}
 }
 
