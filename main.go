@@ -12,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var port, certFile, keyFile, certContent, keyContent string
+var port, certFile, keyFile, certContent, keyContent, logLevel string
 
 func init() {
 	flag.StringVar(&port, "port", "8080", "give me a port number")
@@ -20,12 +20,19 @@ func init() {
 	flag.StringVar(&keyFile, "key", "", "key file")
 	flag.StringVar(&certContent, "certcontent", "", "cert content")
 	flag.StringVar(&keyContent, "keycontent", "", "key content")
+	flag.StringVar(&logLevel, "loglevel", "DEBUG", "loglevel")
 }
 
 func main() {
 	flag.Parse()
-
 	var err error
+
+	lvl, err := logrus.ParseLevel(logLevel)
+	if err != nil {
+		lvl = logrus.DebugLevel
+	}
+	logrus.SetLevel(lvl)
+
 	var l net.Listener
 	if certFile != "" && keyFile != "" {
 		config := &tls.Config{}
